@@ -10,19 +10,21 @@ Use Test Data.csv to see the visualizations currently being produced when a user
 
 # Ideas for Further Improvement
 Some of these are merely thoughts while some need minor code changes.
+
 ## Analysis
--	Weather API implementation
+- Weather API implementation
   -	Given a user inputs a start and end date of their data and a lat/long of the test site location, pull historical weather data and plot variables such as rainfall.
   -	Historical weather data must be paid for on Googles OpenWeatherMap service as well as Dark Sky API
-  -	Any other possibilities?
+- Watershed
 -	Add any other useful visualizations for chemical concentrations, weather, etc. 
+
 ## Possible Intervention
 -	Zoom to Site Location as opposed to all of California
--	Filter list to show locations with a certain radius of the specified site location
+-	Filter list to show locations within a certain radius of the specified site location
 -	Export list of facilities
 -	Choose multiple facility types
--	Add other location types
-  -	Military facilities
+- Add other location types
+  -	Military Facilities
   -	Airports
   -	Firefighting Training Facilities
   -	EPA’s Superfund National Priorities List (NPL)
@@ -30,12 +32,13 @@ Some of these are merely thoughts while some need minor code changes.
       https://toxmap.nlm.nih.gov/toxmap/app/
   - National Air Toxics Assessment
       https://www.epa.gov/national-air-toxics-assessment
+      
 ## Information & Help
 - Add links to important information
   -	RMP, potentially hazardous sites
       https://www.epa.gov/rmp
       https://www.epa.gov/rmp/list-regulated-substances-under-risk-management-plan-rmp-program
-  - Landfill	
+  - Landfills	
       https://www.epa.gov/lmop/landfill-technical-data
   - UCMR 3
       https://www.epa.gov/dwucmr/third-unregulated-contaminant-monitoring-rule
@@ -52,6 +55,6 @@ Some of these are merely thoughts while some need minor code changes.
       https://www.epa.gov/enviro/system-data-searches
       https://enviro.epa.gov/facts/tri/ef-facilities/#/Facility/91016MXXXX1601S
 ## Other
-- Better format? Dashboard?
+- Better format? Dashboard? Map with interactive layers?
 - This application could easily be used for other contaminants as well, if the user's data is in the specified format.
 - Open to all ideas and suggestions! 
