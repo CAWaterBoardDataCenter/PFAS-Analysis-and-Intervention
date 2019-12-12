@@ -1,0 +1,45 @@
+---
+title: "Weather Analysis"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(shiny)
+library(leaflet)
+library(ggplot2)
+library(plotly)#ggplotly
+library(reshape)#cast
+library(corrplot) #corrplot
+library(rnoaa)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+#obtain noaa token from https://www.ncdc.noaa.gov/cdo-web/token
+options(noaakey = "your unique token")
+
+nutPlains <- data.frame(id = "NutPlains", latitude = 38.56942, longitude = -121.309162)
+
+allStations<- ghcnd_stations() %>%
+  filter(last_year >= format(Sys.Date(), "%Y"))
+
+station <- meteo_nearby_stations(lat_lon_df = nutPlains, station_data = allStations,
+                      limit = 1, var = "PRCP", year_min = as.integer(format(Sys.Date(), "%Y")))
+
+stationID <- station$NutPlains[[1]]
+
+precipitation <- meteo_tidy_ghcnd(stationID, keep_flags = FALSE, var = "PRCP",
+                 date_min = '2017-09-19', date_max = '2019-10-16')
+
+precipitation[is.na(precipitation)] <- 0
+
+ggplotly(ggplot(precipitation, aes(x=date, y=prcp)) +
+        ggtitle("Site Precipitation") +
+        geom_line(color = "#0d7591")+
+        geom_point(color = "#0d7591")+
+       theme(axis.text.x = element_text(angle = 90, hjust = 1),
+             axis.title.x=element_blank()
+             ))
+```
