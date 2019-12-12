@@ -1,7 +1,11 @@
 ---
 title: "PFAS Analysis and Intervention"
 author: Last updated by Melissa Salazar, `r format(Sys.Date(), "%B %d, %Y")`
-output: html_document
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+    theme: readable
 runtime: shiny
 ---
 
@@ -13,52 +17,47 @@ library(ggplot2)
 library(plotly)#ggplotly
 library(reshape)#cast
 library(corrplot) #corrplot
+library(rsconnect)
 ```
-# {.tabset .tabset-fade .tabset-pills}
 
-## Analysis
+
+Sidebar {.sidebar data-width=500}
+======================================================================
 ```{r, echo=FALSE}
-sidebarLayout(
-  sidebarPanel(width = 4,
-               
-              fileInput("file", "Choose a CSV File",
-              multiple = FALSE,
-              accept = c("text/csv",
-                         "text/comma-separated-values,text/plain",
-                         ".csv")),
-              helpText("Upload a .csv of test results for one test site. Your file should have a column named   \"Parameter\", \"Date\", and \"Result.Value\"."),
+
+    fileInput("file", "Choose a CSV File",  multiple = FALSE, accept = c("text/csv",
+                         "text/comma-separated-values,text/plain", ".csv"))
+    helpText("Upload a .csv of test results for one test site. Your file should have a column named   \"Parameter\", \"Date\", and \"Result.Value\".")
     
     # Input: Select number of rows to display ----
     radioButtons("disp", "Display",
                  choices = c(Head = "head",
                              All = "all"),
-                 selected = "head"),
-    p(),
-    p(),
-    dateRangeInput(inputId = "weather", label = "Enter the time frame in which your data covers.", format = "mm-dd-yyyy"),
+                 selected = "head")
 
-    actionButton("weatherdisplay", "Display Weather Data")
-  ),
-mainPanel(
-    helpText("To see an individual Parameter, click on the Parameter in the legend of the corresponding line plot."),
-    renderTable({
-        
-        # input$file will be NULL initially. After the user selects
-        # and uploads a file, head of that data file by default,
-        # or all rows if selected, will be shown.
-      
-        req(input$file)
-        
-        df <- read.csv(input$file$datapath)
-        
-        if(input$disp == "head") {
-          return(head(df))
-        }
-        else {
-          return(df)
-        }
-        
-      }),
+    textInput(inputId = "SiteID", label = "Please enter a user defined Site ID, latitude, longitude, and time frame.")
+    numericInput("lat", label = h5("Latitude:"), value = 38.5816, min = -90, max = 90)
+    numericInput("long", label = h5("Longitude:"), value = -121.4944, min = -180, max = 180)
+    actionButton("recalc", "Show point")
+    
+#    dateRangeInput(inputId = "weather", label = "Enter the time frame in which your data covers.", format = "mm-dd-yyyy")
+#    actionButton("weatherdisplay", "Display Weather Data")
+    
+    selectInput("dataset", "Choose What Facilities You Would Like to Show:",
+                choices = c("Landfills", "RMP Facilities"))
+
+actionButton("facilities", "Show Facilities")
+```
+
+Analysis
+============================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### Contamination Levels
+
+```{r, echo=FALSE}
     renderPlotly({
     
       req(input$file)
@@ -69,15 +68,17 @@ mainPanel(
       mutate(Date = as.Date(Date, format = "%m/%d/%Y"))
     
     ggplotly(ggplot(df, aes(x=Date, y=Result.Value, group=Parameter)) +
-        ggtitle("Contamination Levels") +
         geom_line(aes(color=Parameter))+
         geom_point(aes(color=Parameter))+
        theme(axis.text.x = element_text(angle = 90, hjust = 1),
              axis.title.x=element_blank()
              ))
     
-    }),
-    
+    })
+```
+
+### Difference Log(x)
+```{r, echo=FALSE}    
     renderPlotly({
       
       req(input$file)
@@ -94,16 +95,17 @@ mainPanel(
     casted_Differences<- cast(diffLog, Date ~ Parameter, fun.aggregate = sum, value = 'Differences')
       
     ggplotly(ggplot(diffLog, aes(x=Date, y=Differences, group=Parameter)) +
-              ggtitle("Difference Log(x)") +
               geom_line(aes(color=Parameter))+
               geom_point(aes(color=Parameter))+
                theme(axis.text.x = element_text(angle = 90, hjust = 1),
                      axis.title.x=element_blank()
                      ))
     
-    }),
-    p(),
-    p(),
+    })
+```
+
+### Correlation Matrix
+```{r, echo=FALSE} 
     
     renderPlot({
       req(input$file)
@@ -116,35 +118,51 @@ mainPanel(
       round(PFAS_corr, 4)
       
       corrplot(PFAS_corr, method = "color",
-               title = "Correlation Matrix",
                type = "upper", 
                addCoef.col = "black", # Add coefficient of correlation
                tl.col = "black", tl.srt = 90, # Text label color and rotation
-               diag = FALSE # hide correlation coefficient on the principal diagonal
+               diag = FALSE, # hide correlation coefficient on the principal diagonal
+               mar=c(0,0,1,0)
             )
 })
 
-
-)
-)
 ```
 
-## Possible Intervention
+Row
+-----------------------------------------------------------------------
+
+### Raw Data
 ```{r, echo=FALSE}
-fluidPage(
-  fluidRow(
-    column(width = 4,
-h4("Enter your location of interest:"),
-    numericInput("lat", label = h5("Latitude:"), value = 38.5816),
-    numericInput("long", label = h5("Longitude:"), value = -121.4944),
-    actionButton("recalc", "Show point"),
-p(),    
-selectInput("dataset", "Choose What Facilities You Would Like to Show:",
-                choices = c("Landfills", "RMP Facilities")),
+    renderTable({
+        helpText("To see an individual Parameter, click on the Parameter in the legend of the corresponding line plot.")
+        # input$file will be NULL initially. After the user selects
+        # and uploads a file, head of that data file by default,
+        # or all rows if selected, will be shown.
+      
+        req(input$file)
+        
+        df <- read.csv(input$file$datapath)
+        
+        if(input$disp == "head") {
+          return(head(df))
+        }
+        else {
+          return(df)
+        }
+        
+      })
+```
 
-actionButton("facilities", "Show Facilities")),
 
-column( width = 8,
+Possible Intervention
+============================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### Map
+
+```{r, echo=FALSE}
 renderLeaflet({
       
   points <- eventReactive(input$recalc, {
@@ -168,9 +186,14 @@ renderLeaflet({
       addCircleMarkers(data = datasetInput(), lat = ~Latitude, lng = ~Longitude, label = ~Facility.Name, color = "black") %>%
       addCircleMarkers(data = points(), color = "red")
   })
-)#column
-),#fluidRow
-fluidRow(
+```
+
+Row
+-----------------------------------------------------------------------
+
+### Facilities
+
+```{r, echo=FALSE}
   
   renderTable({
     
@@ -186,22 +209,22 @@ fluidRow(
   }, ignoreNULL = FALSE)
     datasetInput()
   })
-  
-)#FluidRow
-)#fluidPage
 ```
 
-## Information & Help
+Information & Help
+============================================================================
+
+Row
+-----------------------------------------------------------------------
+
 ### Background Information
-***
+
 #### PFAS, which stands for Per- and Polyfluoroalkyl Substances, is a family of over 4,000 chemicals. PFAS are unique due to their bio-persistent characteristic. Bio-persistant meaning it takes an immense amount of energy to break down.The Unregulated Contaminant Monitoring Rule (UCMR) 3 program of 2013-2015 required drinking water to be tested for PFAS. In summary, the UCMR3 testing found many test sites with contamination levels over the required notification level. As awareness arises and monitoring becomes more consistent it would be useful, for the organizations testing for PFAS, to quickly and easily analyze their test data.
+
 ### How the App is Intended to be Used
-***
 #### In the Analysis section, upload a csv of test results for a given site in the following format. Once you have uploadad a file with the correct format the app will generate multiple visualizations for analysis. Enter the date range of your data to access weather data.
+
 ```{r, echo = FALSE}
 example <- read.csv("Upload Example.csv")
 DT::datatable(example, rownames = FALSE )
 ```
-
-
-#### In the Intervention section, enter the coordinates of your test site and click "Show Point". Then choose what facilities you would like to show and click "Show Facilities". The map will show all the facilities in black while your specified test site will be shown in red. The table below will show facilities within a 20 mile radius.
