@@ -1,0 +1,68 @@
+---
+title: "Weather Analysis"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+setwd("C:/Users/msalazar/OneDrive/R/PFAS")
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(shiny)
+library(leaflet)
+library(ggplot2)
+library(plotly)#ggplotly
+library(reshape)#cast
+library(corrplot) #corrplot
+library(rnoaa)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+options(noaakey = "QVgWwfzTSBgWmHTDuOqzZvXAjxUoBxPq")
+
+nutPlains <- data.frame(id = "NutPlains", latitude = 38.56942, longitude = -121.309162)
+
+allStations<- ghcnd_stations() %>%
+  filter(last_year >= format(Sys.Date(), "%Y"))
+
+station <- meteo_nearby_stations(lat_lon_df = nutPlains, station_data = allStations,
+                      limit = 1, var = "PRCP", year_min = as.integer(format(Sys.Date(), "%Y")))
+
+stationID <- station$NutPlains[[1]]
+
+precipitation <- meteo_tidy_ghcnd(stationID, keep_flags = FALSE, var = "PRCP",
+                 date_min = '2017-09-19', date_max = '2019-10-16')
+
+precipitation[is.na(precipitation)] <- 0
+
+ggplotly(ggplot(precipitation, aes(x=date, y=prcp)) +
+        ggtitle("Site Precipitation") +
+        geom_line(color = "#0d7591")+
+        geom_point(color = "#0d7591")+
+       theme(axis.text.x = element_text(angle = 90, hjust = 1),
+             axis.title.x=element_blank()
+             ))
+```
+```{r}
+df <- read.csv(input$file$datapath)
+      
+      casted <- cast(df, Date ~ Parameter, fun.aggregate = sum, value = 'Result.Value')
+      
+      PFAS_corr <- cor(casted)
+      round(PFAS_corr, 4)
+      
+      ggplot(melt(PFAS_corr), aes(Var1, Var2, fill = value, label=value)) + geom_tile() + 
+  scale_fill_gradient(low = "#0d7591",  high = "red")
+      
+       corrplot(PFAS_corr, method = "color",
+               title = "Correlation Matrix",
+               type = "upper", 
+               addCoef.col = "black", # Add coefficient of correlation
+               tl.col = "black", tl.srt = 90, # Text label color and rotation
+               diag = FALSE, # hide correlation coefficient on the principal diagonal
+               mar=c(0,0,1,0)
+            )
+```
+
+
+
