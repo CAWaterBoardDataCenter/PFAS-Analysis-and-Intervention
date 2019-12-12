@@ -6,6 +6,8 @@ output:
     orientation: rows
     vertical_layout: fill
     theme: readable
+    social: menu
+    source_code: embed
 runtime: shiny
 ---
 
