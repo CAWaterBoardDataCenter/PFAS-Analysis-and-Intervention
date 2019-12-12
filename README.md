@@ -58,3 +58,19 @@ Some of these are merely thoughts while some need minor code changes.
 - Better format? Dashboard? Map with interactive layers?
 - This application could easily be used for other contaminants as well, if the user's data is in the specified format.
 - Open to all ideas and suggestions! 
+
+### December 4th - 5th, 2019
+## PFAS in California: Past, Present, and Future
+Melissa Salazar, Andrew Cullen
+- Andrew was able to pull data from the PFAS database hosted by the California Water Boards to test the functionality of the app
+    - Nut Plains - Sacramento 3410010-010.csv
+- I, Melissa Salazar, was able to find an R package called rnoaa that will use a lat/long position to find the nearest weather station and provided weather data from NOAA
+    -https://cran.r-project.org/web/packages/rnoaa/rnoaa.pdf
+    -https://github.com/ropensci/rnoaa
+    -https://recology.info/2015/07/weather-data-with-rnoaa/
+    -https://rdrr.io/cran/rnoaa/man/meteo_nearby_stations.html
+    - Weather Analysis.Rmd is a short example to test how the package works
+
+### December 12th, 2019
+- Format changes were made, from an rmarkdown with shiny widgets to a flex dashboard
+- Precipitation widgets will be added in the near future!
