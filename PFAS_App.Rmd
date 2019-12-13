@@ -13,6 +13,7 @@ runtime: shiny
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
 library(shiny)
 library(leaflet)
 library(ggplot2)
@@ -20,6 +21,7 @@ library(plotly)#ggplotly
 library(reshape)#cast
 library(corrplot) #corrplot
 library(rsconnect)
+library(rnoaa)
 ```
 
 
@@ -37,14 +39,12 @@ Sidebar {.sidebar data-width=500}
                              All = "all"),
                  selected = "head")
 
-    textInput(inputId = "SiteID", label = "Please enter a user defined Site ID, latitude, longitude, and time frame.")
+    textInput(inputId = "siteID", label = "Please enter a user defined Site ID, latitude, longitude, and time frame.", value = "Sacramento")
     numericInput("lat", label = h5("Latitude:"), value = 38.5816, min = -90, max = 90)
     numericInput("long", label = h5("Longitude:"), value = -121.4944, min = -180, max = 180)
-    actionButton("recalc", "Show point")
-    
-#    dateRangeInput(inputId = "weather", label = "Enter the time frame in which your data covers.", format = "mm-dd-yyyy")
-#    actionButton("weatherdisplay", "Display Weather Data")
-    
+    #dateRangeInput(inputId = "weather", label = "Enter the time frame in which your data covers.", format = "mm-dd-yyyy")
+    actionButton("recalc", "GO")
+    p()
     selectInput("dataset", "Choose What Facilities You Would Like to Show:",
                 choices = c("Landfills", "RMP Facilities"))
 
@@ -54,7 +54,7 @@ actionButton("facilities", "Show Facilities")
 Analysis
 ============================================================================
 
-Row
+Row {data-height=700}
 -----------------------------------------------------------------------
 
 ### Contamination Levels
@@ -130,6 +130,7 @@ Row
 
 ```
 
+
 Row
 -----------------------------------------------------------------------
 
@@ -166,6 +167,10 @@ Row
 
 ```{r, echo=FALSE}
 renderLeaflet({
+  
+  userSiteID <- eventReactive(input$recalc, {
+  input$siteID
+  }, ignoreNULL = FALSE)
       
   points <- eventReactive(input$recalc, {
   cbind(input$long, input$lat)
@@ -186,12 +191,10 @@ renderLeaflet({
       addTiles() %>%
       #addProviderTiles("Esri.WorldStreetMap",options = providerTileOptions(noWrap = TRUE)) %>%
       addCircleMarkers(data = datasetInput(), lat = ~Latitude, lng = ~Longitude, label = ~Facility.Name, color = "black") %>%
-      addCircleMarkers(data = points(), color = "red")
+      addCircleMarkers(data = points(), label = userSiteID(), color = "red")
   })
 ```
 
-Row
------------------------------------------------------------------------
 
 ### Facilities
 
